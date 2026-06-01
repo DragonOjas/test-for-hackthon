@@ -1,0 +1,3478 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>REN---</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--black);
+        }
+
+        :root {
+            --black: #080808;
+            --black2: #0d0d0d;
+            --white: #f0ece4;
+            --white2: #c8c0b0;
+            --dim: #4a4a4a;
+            --dim2: #2a2a2a;
+            --accent: #ffffff;
+            --border: rgba(255, 255, 255, 0.08);
+            --border2: rgba(255, 255, 255, 0.15);
+            --green: #2a5a3a;
+            /* terminal tint */
+            --mono: 'JetBrains Mono', monospace;
+            --serif: 'Playfair Display', serif;
+            --sans: 'Syne', sans-serif;
+            --italic: 'Cormorant Garamond', serif;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: radial-gradient(circle at top left, rgba(0, 255, 240, 0.08), transparent 18%),
+                        radial-gradient(circle at bottom right, rgba(83, 121, 235, 0.08), transparent 20%),
+                        var(--black);
+            color: var(--white);
+            overflow-x: hidden;
+            cursor: default;
+            transition: background 0.6s ease, filter 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Theme class removed */
+
+        /* ── CURSOR ── */
+        #cursor {
+            position: fixed;
+            z-index: 9999;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: width .2s, height .2s;
+        }
+
+        #cursor-ring {
+            position: fixed;
+            z-index: 9998;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ── CANVAS STARS ── */
+        #star-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── BG KANJI ── */
+        #bg-kanji {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Yu Mincho', 'Sawarabi Mincho', serif;
+            font-size: 85vh;
+            color: rgba(255, 255, 255, 0.025);
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            line-height: 1;
+        }
+
+        /* ── SIDEBAR TEXT ── */
+        .sidebar-text {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) rotate(180deg);
+            z-index: 20;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            padding-left: 14px;
+            user-select: none;
+        }
+
+        .sidebar-text-right {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            padding-right: 14px;
+            user-select: none;
+        }
+
+        /* ── CORNER BRACKETS ── */
+        .corner {
+            position: fixed;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .corner svg {
+            display: block;
+        }
+
+        .corner-tl {
+            top: 18px;
+            left: 18px;
+        }
+
+        .corner-tr {
+            top: 18px;
+            right: 18px;
+        }
+
+        .corner-bl {
+            bottom: 18px;
+            left: 18px;
+        }
+
+        .corner-br {
+            bottom: 18px;
+            right: 18px;
+        }
+
+        /* ── SYS STATUS PANEL (bottom-right) ── */
+        #sys-panel {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 50;
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.8;
+            text-align: right;
+        }
+
+        #sys-panel .sp-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+        }
+
+        #sys-panel .sp-label {
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        #sys-panel .sp-val {
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.1em;
+        }
+
+        #sys-panel .bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            margin-bottom: 6px;
+            justify-content: flex-end;
+        }
+
+        #sys-panel .bar {
+            width: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            animation: barAnim 1.4s ease-in-out infinite;
+        }
+
+        #sys-panel .bar:nth-child(1) {
+            height: 6px;
+            animation-delay: 0s
+        }
+
+        #sys-panel .bar:nth-child(2) {
+            height: 10px;
+            animation-delay: .1s
+        }
+
+        #sys-panel .bar:nth-child(3) {
+            height: 14px;
+            animation-delay: .2s
+        }
+
+        #sys-panel .bar:nth-child(4) {
+            height: 8px;
+            animation-delay: .3s
+        }
+
+        #sys-panel .bar:nth-child(5) {
+            height: 12px;
+            animation-delay: .4s
+        }
+
+        #sys-panel .bar:nth-child(6) {
+            height: 5px;
+            animation-delay: .5s
+        }
+
+        @keyframes barAnim {
+
+            0%,
+            100% {
+                opacity: .3
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        /* ── DESCEND ARROW ── */
+        #descend-wrap {
+            position: fixed;
+            left: 50%;
+            bottom: 60px;
+            transform: translateX(-50%);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.25);
+            writing-mode: vertical-rl;
+        }
+
+        #descend-wrap span {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        #descend-wrap .arrow {
+            font-size: 14px;
+            animation: arrowBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes arrowBounce {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(6px)
+            }
+        }
+
+        #navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 8, 8, 0.6);
+            backdrop-filter: blur(8px);
+        }
+
+        .nav-logo {
+            font-family: var(--serif);
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-logo .bracket {
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 300;
+        }
+
+        .nav-logo .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 18px;
+            background: #fff;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            transition: color .2s;
+            cursor: none;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        /* Toggle */
+        .nav-toggle {
+            display: flex;
+            gap: 0;
+        }
+
+        .toggle-btn {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: none;
+            transition: all .3s;
+        }
+
+        .toggle-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .toggle-btn:first-child {
+            border-radius: 1px 0 0 1px;
+        }
+
+        .toggle-btn:last-child {
+            border-radius: 0 1px 1px 0;
+            border-left: none;
+        }
+
+
+        .page-section {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding: 120px 80px 80px;
+        }
+
+
+        #landing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 40px;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.5em;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 28px;
+            opacity: 0;
+            transform: translateY(10px);
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            font-family: var(--serif);
+            font-size: clamp(80px, 14vw, 200px);
+            font-weight: 900;
+            line-height: 0.9;
+            color: #fff;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            display: flex;
+            align-items: center;
+            gap: 0.15em;
+        }
+
+        .hero-title .x-mark {
+            font-family: var(--serif);
+            font-weight: 300;
+            font-size: 0.5em;
+            color: rgba(255, 255, 255, 0.5);
+            display: inline-block;
+            margin: 0 0.1em;
+        }
+
+        .hero-subtitle {
+            font-family: var(--mono);
+            font-size: 13px;
+            letter-spacing: 0.5em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 12px;
+            opacity: 0;
+            transform: translateY(10px);
+            text-transform: uppercase;
+        }
+
+        .hero-subtitle .jp {
+            letter-spacing: 0.15em;
+            margin-right: 12px;
+        }
+
+        .hero-desc {
+            font-family: var(--italic);
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 56px;
+            max-width: 520px;
+            line-height: 1.7;
+            opacity: 0;
+            transform: translateY(10px);
+            font-style: italic;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 0;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .hero-btn {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            padding: 18px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            cursor: none;
+            transition: all .3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hero-btn.primary {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .hero-btn.secondary {
+            background: transparent;
+            color: #fff;
+            border-left: none;
+        }
+
+        .hero-btn:hover {
+            opacity: 0.8;
+        }
+
+
+        .sec-header {
+            margin-bottom: 60px;
+        }
+
+        .sec-title {
+            font-family: var(--serif);
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .sec-sub {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+        }
+
+
+        #capabilities {
+            background: var(--black2);
+        }
+
+        .cap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin-bottom: 60px;
+        }
+
+        .cap-card {
+            background: var(--black2);
+            padding: 40px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: background .3s;
+        }
+
+        .cap-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: scaleX(0);
+            transition: transform .4s;
+        }
+
+        .cap-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .cap-card:hover {
+            background: #111;
+        }
+
+        .cap-num {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .cap-icon {
+            font-size: 22px;
+            margin-bottom: 14px;
+            opacity: 0.7;
+        }
+
+        .cap-name {
+            font-family: var(--serif);
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            line-height: 1.1;
+        }
+
+        .cap-desc {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.8;
+            letter-spacing: 0.03em;
+        }
+
+        .cap-tag {
+            display: inline-block;
+            margin-top: 16px;
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.3em;
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+        }
+
+        .cap-tag.ren-tag {
+            border-color: rgba(0, 255, 240, 0.2);
+            color: rgba(0, 255, 240, 0.5);
+        }
+
+        .cap-tag.dual-tag {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Full-width capability bars */
+        .cap-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .cap-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .cap-bar-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.35);
+            text-transform: uppercase;
+            width: 160px;
+            flex-shrink: 0;
+        }
+
+        .cap-bar-track {
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .cap-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            width: 0%;
+            transition: width 1.5s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        .cap-bar-fill.ren-fill {
+            background: rgba(0, 255, 240, 0.5);
+        }
+
+        .cap-bar-pct {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.3);
+            width: 36px;
+            text-align: right;
+        }
+
+        /* ══════════════════════════════════════
+   IDENTITY SECTION
+══════════════════════════════════════ */
+        #identity {
+            background: var(--black);
+        }
+
+        .identity-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .identity-card {
+            padding: 56px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .identity-card.ren-card {
+            background: #060608;
+            position: relative;
+        }
+
+        .identity-card.ren-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 240, 0.4), transparent);
+            animation: shimmerLine 3s ease-in-out infinite;
+        }
+
+        .identity-card.tutor-card {
+            background: #06080a;
+            position: relative;
+        }
+
+        .identity-card.tutor-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.4), transparent);
+            animation: shimmerLine 3s ease-in-out infinite;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes shimmerLine {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scaleX(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        .id-accent-line {
+            width: 40px;
+            height: 1px;
+            margin-bottom: 32px;
+        }
+
+        .ren-card .id-accent-line {
+            background: linear-gradient(90deg, rgba(0, 255, 240, 0.8), rgba(0, 255, 240, 0.1));
+            box-shadow: 0 0 12px rgba(0, 255, 240, 0.3);
+        }
+
+        .tutor-card .id-accent-line {
+            background: linear-gradient(90deg, rgba(0, 255, 204, 0.8), rgba(0, 255, 204, 0.1));
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+        }
+
+        .id-tag {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.5em;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .ren-card .id-tag {
+            color: rgba(0, 255, 240, 0.5);
+        }
+
+        .tutor-card .id-tag {
+            color: rgba(0, 255, 204, 0.5);
+        }
+
+        .id-name {
+            font-family: var(--serif);
+            font-size: clamp(48px, 5vw, 72px);
+            font-weight: 900;
+            line-height: 0.85;
+            margin-bottom: 8px;
+        }
+
+        .ren-card .id-name {
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 255, 240, 0.15);
+        }
+
+        .tutor-card .id-name {
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 255, 204, 0.15);
+        }
+
+        .id-subtitle {
+            font-family: var(--italic);
+            font-size: 15px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 36px;
+            letter-spacing: 0.05em;
+        }
+
+        .id-trait-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin-bottom: 36px;
+        }
+
+        .id-trait {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: var(--mono);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.03em;
+            line-height: 1.7;
+        }
+
+        .id-trait .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .ren-card .dot {
+            background: rgba(0, 255, 240, 0.6);
+            box-shadow: 0 0 6px rgba(0, 255, 240, 0.4);
+        }
+
+        .tutor-card .dot {
+            background: rgba(0, 255, 204, 0.6);
+            box-shadow: 0 0 6px rgba(0, 255, 204, 0.4);
+        }
+
+        .id-trait strong {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .id-quote {
+            font-family: var(--italic);
+            font-size: 16px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.25);
+            line-height: 1.8;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 20px;
+            margin-top: 24px;
+        }
+
+        .id-stat-row {
+            display: flex;
+            gap: 32px;
+            margin-top: 36px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .id-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .id-stat .st-val {
+            font-family: var(--serif);
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .id-stat .st-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+        }
+
+        /* Large bg name */
+        .id-bg-name {
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            font-family: var(--serif);
+            font-size: 120px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.02);
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: -0.04em;
+        }
+
+        /* ══════════════════════════════════════
+   MEMORY SECTION
+══════════════════════════════════════ */
+        #memory {
+            background: var(--black2);
+        }
+
+        .memory-terminals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .terminal-wrap {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-wrap.nat-term {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .terminal-wrap.ren-term {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Scan line for Parser Terminal */
+        .terminal-wrap.nat-term::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0, 255, 204, 0.3);
+        }
+
+        .terminal-wrap.ren-term::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .term-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .term-title {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .term-rec {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 50, 50, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rec-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 50, 50, 0.7);
+            animation: blink 1.2s ease-in-out infinite;
+        }
+
+        .term-body {
+            padding: 20px 20px;
+            min-height: 280px;
+            font-family: var(--mono);
+            font-size: 11px;
+            line-height: 2;
+            color: rgba(255, 255, 255, 0.35);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .term-line {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .term-line.visible {
+            animation: lineIn .3s ease forwards;
+        }
+
+        @keyframes lineIn {
+            from {
+                opacity: 0;
+                transform: translateX(-4px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .term-line .ts {
+            color: rgba(255, 255, 255, 0.2);
+            margin-right: 6px;
+        }
+
+        .term-line .cmd {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .term-line .ok {
+            color: rgba(80, 200, 120, 0.7);
+        }
+
+        .term-line .warn {
+            color: rgba(255, 200, 80, 0.7);
+        }
+
+        .term-line .info {
+            color: rgba(120, 180, 255, 0.7);
+        }
+
+        .term-line .ren-c {
+            color: rgba(0, 255, 240, 0.6);
+        }
+
+        .term-line .nat-c {
+            color: rgba(232, 97, 157, 0.6);
+        }
+
+        /* Status bar under terminal */
+        .term-status {
+            display: flex;
+            gap: 24px;
+            padding: 10px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .ts-item {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+        }
+
+        .ts-item span {
+            color: rgba(255, 255, 255, 0.45);
+            margin-left: 6px;
+        }
+
+        /* Memory stats row */
+        .memory-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-top: 20px;
+        }
+
+        .mem-stat-card {
+            background: var(--black2);
+            padding: 24px 28px;
+        }
+
+        .msc-num {
+            font-family: var(--serif);
+            font-size: 36px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .msc-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* ══════════════════════════════════════
+   CREATOR SECTION
+══════════════════════════════════════ */
+        #creator {
+            background: var(--black);
+        }
+
+        .creator-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: start;
+        }
+
+        .creator-left {}
+
+        .creator-tag {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.5em;
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .creator-tag::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .creator-name {
+            font-family: var(--serif);
+            font-size: clamp(40px, 5vw, 64px);
+            font-weight: 900;
+            color: #fff;
+            line-height: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .creator-title {
+            font-family: var(--italic);
+            font-size: 18px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 36px;
+        }
+
+        .creator-bio {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 2;
+            letter-spacing: 0.02em;
+            margin-bottom: 36px;
+        }
+
+        .creator-bio em {
+            color: rgba(255, 255, 255, 0.7);
+            font-style: normal;
+        }
+
+        .creator-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .creator-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.35);
+            text-decoration: none;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: color .2s;
+            cursor: none;
+        }
+
+        .creator-link:hover {
+            color: #fff;
+        }
+
+        .creator-link .link-icon {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .creator-link .link-arrow {
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .creator-link:hover .link-arrow {
+            opacity: 1;
+        }
+
+        .creator-right {}
+
+        .creator-spec-title {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .spec-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .spec-key {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            width: 120px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .spec-val {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.7;
+        }
+
+        .spec-val em {
+            color: rgba(255, 255, 255, 0.8);
+            font-style: normal;
+        }
+
+        .creator-msg {
+            margin-top: 40px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .creator-msg-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .creator-msg p {
+            font-family: var(--italic);
+            font-size: 16px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.45);
+            line-height: 1.9;
+        }
+
+        /* ══════════════════════════════════════
+   CHAT PAGE
+══════════════════════════════════════ */
+        #chat-page {
+            position: relative;
+            z-index: 10;
+            display: none;
+            min-height: 100vh;
+            padding-top: 72px;
+        }
+
+        .chat-layout {
+            display: flex;
+            height: calc(100vh - 72px);
+        }
+
+        /* Sidebar */
+        .chat-sidebar {
+            width: 220px;
+            border-right: 1px solid var(--border);
+            padding: 20px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+            background: rgba(8, 8, 8, 0.9);
+        }
+
+        .sb-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            padding: 8px 10px 14px;
+        }
+
+        .sb-btn {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            padding: 9px 10px;
+            border-radius: 2px;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: none;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.03em;
+        }
+
+        .sb-btn:hover,
+        .sb-btn.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .sb-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .sb-btn.active .sb-dot {
+            background: #fff;
+        }
+
+        .pers-panel {
+            margin-top: auto;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .pp-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .pp-name {
+            font-family: var(--serif);
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .pp-desc {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+
+        /* Main chat */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-top {
+            padding: 16px 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(8, 8, 8, 0.9);
+        }
+
+        .chat-orb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, #fff, #888);
+            flex-shrink: 0;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .6
+            }
+        }
+
+        .chat-top-info h2 {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: #fff;
+        }
+
+        .chat-top-info p {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 2px;
+        }
+
+        .online-dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #4ade80;
+            margin-right: 5px;
+            animation: blink 2s infinite;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        #messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #messages::-webkit-scrollbar-thumb {
+            background: var(--dim2);
+        }
+
+        /* Welcome */
+        .welcome-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .wc-title {
+            font-family: var(--serif);
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .wc-sub {
+            font-family: var(--italic);
+            font-style: italic;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .wc-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .chip {
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 8px 16px;
+            border: 1px solid var(--border2);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: none;
+            transition: all .2s;
+        }
+
+        .chip:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        /* Messages */
+        .msg-row {
+            display: flex;
+            gap: 10px;
+            animation: msgIn .35s cubic-bezier(.22, 1, .36, 1) forwards;
+        }
+
+        .msg-row.user {
+            flex-direction: row-reverse;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .msg-av {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .av-ren {
+            background: rgba(0, 255, 240, 0.1);
+            border: 1px solid rgba(0, 255, 240, 0.3);
+            color: rgba(0, 255, 240, 0.8);
+        }
+
+        .av-nat {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            color: rgba(0, 255, 204, 0.8);
+        }
+
+        .av-user {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .msg-bubble {
+            max-width: 65%;
+            padding: 13px 17px;
+            border: 1px solid;
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        .bubble-ren {
+            background: #0a0c10;
+            border-color: rgba(0, 255, 240, 0.1);
+            color: rgba(200, 220, 235, 0.9);
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .bubble-nat {
+            background: #0a0c10;
+            border-color: rgba(0, 255, 204, 0.1);
+            color: rgba(200, 220, 235, 0.9);
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .bubble-user {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-family: var(--sans);
+        }
+
+        .bubble-tag {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.3em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .ren-tag-txt {
+            color: rgba(0, 255, 240, 0.7);
+        }
+
+        .nat-tag-txt {
+            color: rgba(0, 255, 204, 0.7);
+        }
+
+        .bubble-time {
+            font-family: var(--mono);
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.2);
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Interface Header for Bubbles */
+        .bubble-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .bh-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bh-right {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .bh-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            animation: blink 1s infinite;
+        }
+
+        /* Typing */
+        .typing-bub {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 13px 17px;
+        }
+
+        .t-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            animation: typingB 1.2s ease infinite;
+        }
+
+        .t-dot:nth-child(2) {
+            animation-delay: .15s
+        }
+
+        .t-dot:nth-child(3) {
+            animation-delay: .3s
+        }
+
+        @keyframes typingB {
+
+            0%,
+            60%,
+            100% {
+                transform: none;
+                opacity: .3
+            }
+
+            30% {
+                transform: translateY(-5px);
+                opacity: 1
+            }
+        }
+
+        /* Input */
+        .chat-input-wrap {
+            padding: 16px 28px 20px;
+            border-top: 1px solid var(--border);
+            background: rgba(8, 8, 8, 0.9);
+        }
+
+        .mode-pills {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .mpill {
+            font-family: var(--mono);
+            font-size: 8px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: none;
+            transition: all .2s;
+        }
+
+        .mpill.active,
+        .mpill:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-family: var(--sans);
+            font-size: 13px;
+            padding: 13px 18px;
+            outline: none;
+            resize: none;
+            min-height: 48px;
+            max-height: 140px;
+            cursor: none;
+            line-height: 1.5;
+            transition: border-color .2s;
+        }
+
+        #chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        #chat-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        #send-btn {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            color: #fff;
+            cursor: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        #send-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        #send-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ══════════════════════════════════════
+   LOADING
+══════════════════════════════════════ */
+        #loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .load-title {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.6em;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .load-bar-wrap {
+            width: 200px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .load-bar {
+            height: 100%;
+            width: 0%;
+            background: #fff;
+            transition: width .04s linear;
+        }
+
+        .load-log {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.2);
+            height: 80px;
+            overflow: hidden;
+            width: 280px;
+        }
+
+        .ll-line {
+            color: rgba(255, 255, 255, 0.2);
+            margin: 2px 0;
+        }
+
+        .ll-line.ok {
+            color: rgba(100, 200, 130, 0.5);
+        }
+
+        /* Transition overlay */
+        #t-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            pointer-events: none;
+            opacity: 0;
+            background: #fff;
+            mix-blend-mode: difference;
+        }
+
+        /* ══════════════════════════════════════
+   GITHUB BANNER
+══════════════════════════════════════ */
+        .github-banner {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+
+        .gb-text {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .gb-text strong {
+            color: #fff;
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .gb-btn {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            padding: 12px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            background: transparent;
+            cursor: none;
+            text-decoration: none;
+            transition: all .3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .gb-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* ══════════════════════════════════════
+   MOBILE OPTIMIZATION
+══════════════════════════════════════ */
+        @media (max-width:900px) {
+
+            .nav-links,
+            .chat-sidebar {
+                display: none;
+            }
+
+            .identity-split,
+            .creator-layout,
+            .memory-terminals {
+                grid-template-columns: 1fr;
+            }
+
+            .cap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-section {
+                padding: 80px 20px;
+            }
+
+            .hero-title {
+                font-size: 14vw;
+            }
+
+            .hero-desc {
+                font-size: 14px;
+            }
+
+            #messages {
+                padding: 15px;
+            }
+
+            .msg-bubble {
+                max-width: 88%;
+            }
+
+            .chat-input-wrap {
+                padding: 12px 15px;
+            }
+
+            .mode-pills {
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .mpill {
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
+
+            .chat-orb {
+                width: 30px;
+                height: 30px;
+            }
+
+            .chat-top-info h2 {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width:480px) {
+            .hero-title {
+                font-size: 18vw;
+            }
+
+            .wc-title {
+                font-size: 24px;
+            }
+
+            .wc-sub {
+                font-size: 14px;
+            }
+
+            .chip {
+                font-size: 9px;
+                padding: 6px 12px;
+            }
+
+            .sidebar-text,
+            .sidebar-text-right {
+                display: none;
+            }
+
+            .msg-av {
+                width: 24px;
+                height: 24px;
+                font-size: 7px;
+            }
+
+            .bubble-header {
+                font-size: 7px;
+            }
+        }
+
+        /* ══════════════════════════════════════
+           UI UPGRADE OVERRIDES
+        ══════════════════════════════════════ */
+        #chat-page {
+            padding-top: 48px;
+            background: linear-gradient(180deg, rgba(3, 8, 18, 0.95) 0%, rgba(0, 0, 0, 1) 100%);
+        }
+
+        .chat-layout {
+            display: flex;
+            min-height: calc(100vh - 48px);
+            max-width: 1520px;
+            margin: 0 auto;
+            padding: 0 20px;
+            gap: 18px;
+        }
+
+        .chat-sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: rgba(10, 16, 28, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 24px 18px;
+            gap: 18px;
+        }
+
+        .sb-label {
+            padding: 10px 12px 16px;
+            letter-spacing: 0.45em;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .sb-btn {
+            border-radius: 16px;
+            padding: 14px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.7);
+            transition: transform .25s ease, background .25s ease, color .25s ease;
+        }
+
+        .sb-btn:hover,
+        .sb-btn.active {
+            background: rgba(0, 255, 240, 0.08);
+            color: #fff;
+            transform: translateX(2px);
+        }
+
+        .sb-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .sb-btn.active .sb-dot {
+            background: #00fff0;
+            box-shadow: 0 0 20px rgba(0, 255, 240, 0.25);
+        }
+
+        .pers-panel {
+            margin-top: auto;
+            padding: 22px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .pp-name {
+            font-size: 22px;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+        }
+
+        .pp-desc {
+            color: rgba(255, 255, 255, 0.42);
+            margin-top: 8px;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: rgba(8, 12, 24, 0.92);
+            border-radius: 32px;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-top {
+            padding: 28px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(18px);
+        }
+
+        .chat-orb {
+            width: 32px;
+            height: 32px;
+            background: radial-gradient(circle at 30% 30%, #00fff0, rgba(0, 255, 255, 0.55));
+            box-shadow: 0 0 20px rgba(0, 255, 240, 0.35);
+        }
+
+        .chat-top-info h2 {
+            font-size: 12px;
+            letter-spacing: 0.35em;
+        }
+
+        .chat-top-info p {
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 6px;
+        }
+
+        #messages {
+            padding: 28px 32px;
+            background: rgba(255, 255, 255, 0.01);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .welcome-center {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 40px 28px;
+            border-radius: 28px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .wc-title {
+            font-size: 44px;
+        }
+
+        .wc-sub {
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 10px;
+        }
+
+        .chip {
+            border-radius: 999px;
+            padding: 10px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .chip:hover {
+            background: rgba(0, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .msg-row {
+            gap: 18px;
+        }
+
+        .msg-av {
+            width: 34px;
+            height: 34px;
+            font-size: 9px;
+        }
+
+        .msg-bubble {
+            max-width: 70%;
+            border-radius: 24px;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+        }
+
+        .bubble-ren,
+        .bubble-nat,
+        .bubble-user {
+            background: rgba(15, 20, 36, 0.95);
+        }
+
+        .bubble-ren {
+            border-color: rgba(0, 255, 240, 0.12);
+        }
+
+        .bubble-nat {
+            border-color: rgba(0, 255, 204, 0.12);
+        }
+
+        .bubble-user {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .bubble-header {
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+        }
+
+        .bubble-time {
+            color: rgba(255, 255, 255, 0.28);
+            margin-top: 12px;
+        }
+
+        .chat-input-wrap {
+            padding: 22px 32px 28px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(18px);
+        }
+
+        .mpill {
+            border-radius: 999px;
+            padding: 8px 16px;
+        }
+
+        #chat-input {
+            border-radius: 20px;
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            line-height: 1.7;
+            min-height: 60px;
+            cursor: text;
+        }
+
+        #send-btn,
+        #stop-btn {
+            cursor: pointer;
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, #00f5ff, #62ffa7);
+            border-color: transparent;
+            color: #050b12;
+        }
+
+        #send-btn:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #00fff0, #76ffb8);
+        }
+
+        #stop-btn {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 68, 68, 0.14);
+            border: 1px solid rgba(255, 68, 68, 0.32);
+            color: #ff4444;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        #stop-btn:hover {
+            background: #ff4444;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Custom cursor -->
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- Star canvas -->
+    <canvas id="star-canvas"></canvas>
+
+    <!-- Transition overlay -->
+    <div id="t-overlay"></div>
+
+    <!-- Background Kanji -->
+    <div id="bg-kanji">心</div>
+
+    <!-- Sidebar text -->
+    <div class="sidebar-text">プロトコル・エンゲージ // OVERRIDE_PROTOCOL_ENGAGED</div>
+    <div class="sidebar-text-right">システム・稼働中 // DUAL_CORE_MATRIX</div>
+
+    <!-- Corner brackets -->
+    <div class="corner corner-tl"><svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M0 20 L0 0 L20 0" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        </svg></div>
+    <div class="corner corner-tr"><svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M20 20 L20 0 L0 0" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        </svg></div>
+    <div class="corner corner-bl"><svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M0 0 L0 20 L20 20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        </svg></div>
+    <div class="corner corner-br"><svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M20 0 L20 20 L0 20" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        </svg></div>
+
+    <!-- Sys panel -->
+    <div id="sys-panel">
+        <div class="bars">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <div class="sp-row"><span class="sp-label">STATUS</span><span class="sp-val">ACTIVE</span></div>
+        <div class="sp-row"><span class="sp-label">PROTOCOL</span><span class="sp-val" id="sys-protocol">REN.CORE</span>
+        </div>
+        <div class="sp-row"><span class="sp-label">T.SYNC</span><span class="sp-val" id="sys-time">--:--:--.---</span>
+        </div>
+    </div>
+
+    <!-- Descend arrow (landing only) -->
+    <div id="descend-wrap">
+        <span>DESCEND</span>
+        <span class="arrow">↓</span>
+    </div>
+
+    <!-- ══════════ LOADING ══════════ -->
+    <div id="loading">
+        <div class="load-title">// SYS.LOAD: PROTOCOL ENGAGED</div>
+        <div class="load-bar-wrap">
+            <div class="load-bar" id="load-bar"></div>
+        </div>
+        <div class="load-log" id="load-log"></div>
+    </div>
+
+    <!-- ══════════ NAVBAR ══════════ -->
+    <nav id="navbar">
+        <div class="nav-logo">
+            <span class="bracket">[</span>REN.CORE<span class="bracket">]</span>
+            <span
+                style="font-size: 10px; margin-left: 8px; color: rgba(255,255,255,0.4); font-family: var(--mono); letter-spacing: 0.2em;">レン</span>
+            <span class="cursor-blink"></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" onclick="scrollToSection('landing');return false">PROTOCOL</a></li>
+            <li><a href="#" onclick="scrollToSection('capabilities');return false">CAPABILITIES</a></li>
+            <li><a href="#" onclick="scrollToSection('identity');return false">IDENTITY</a></li>
+            <li><a href="#" onclick="scrollToSection('memory');return false">MEMORY</a></li>
+            <li><a href="#" onclick="scrollToSection('creator');return false">CREATOR</a></li>
+        </ul>
+        <div class="nav-toggle">
+            <span
+                style="font-family: var(--mono); font-size: 10px; color: #00fff0; letter-spacing: 0.1em; border: 1px solid rgba(0, 255, 240, 0.3); padding: 6px 12px; background: rgba(0, 255, 240, 0.05); font-weight: 700;">//
+                INTERACTIVE TUTOR CORE ACTIVE</span>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════
+     MAIN SITE (all scrollable sections)
+═══════════════════════════════════════════ -->
+    <div id="site">
+
+        <!-- ──── HERO ──── -->
+        <section class="page-section" id="landing"
+            style="position:relative; display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 40px;">
+
+            <div
+                style="position:absolute; width: 65vh; height: 65vh; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index:0;">
+            </div>
+            <div
+                style="position:absolute; width: 12px; height: 12px; border: 1px solid rgba(255,255,255,0.8); background: #fff; border-radius: 50%; top: 20%; left: 35%; pointer-events: none; z-index:0; box-shadow: 0 0 10px #fff;">
+            </div>
+            <div
+                style="position:absolute; width: 8px; height: 8px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.8); border-radius: 50%; top: 15%; left: 50%; pointer-events: none; z-index:0;">
+            </div>
+
+            <div class="hero-eyebrow" id="hero-eyebrow" style="z-index:2;">// SYS.LOAD: PROTOCOL ENGAGED</div>
+
+            <h1 class="hero-title" id="hero-title" style="z-index:2; position:relative;">
+                REN.CORE
+            </h1>
+
+            <p class="hero-subtitle" id="hero-sub" style="z-index:2; position:relative;">
+                <span class="jp">レン・コア</span> // &nbsp;THE INTERACTIVE CODE TUTOR
+            </p>
+
+            <p class="hero-desc" id="hero-desc" style="z-index:2; position:relative;">
+                An elite technical mentor and interactive coding tutor. Learn, understand, and master software
+                engineering. Powered by Groq. Built by Ojas from Lucknow.
+            </p>
+
+            <div class="hero-btns" id="hero-btns" style="z-index:2; position:relative;">
+                <button class="hero-btn primary" onclick="enterChat()">
+                    EXECUTE OVERRIDE &nbsp;→
+                </button>
+                <button class="hero-btn secondary" onclick="scrollToSection('memory')">
+                    VIEW SYSTEM LOGS &nbsp;>_
+                </button>
+            </div>
+        </section>
+
+        <!-- ──── GRID ARRAY ──── -->
+        <section class="page-section" id="grid-section"
+            style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; height: 100vh;">
+            <div
+                style="position:absolute; width: 55vh; height: 55vh; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index:0;">
+            </div>
+
+            <div
+                style="font-family: var(--mono); letter-spacing: 0.8em; font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 60px; z-index: 2;">
+                G R I D &nbsp; A R R A Y
+            </div>
+
+            <div id="kana-grid"
+                style="display: grid; grid-template-columns: repeat(15, 1fr); gap: 20px 30px; font-family: 'Yu Mincho', 'Sawarabi Mincho', serif; font-size: 16px; color: rgba(255,255,255,0.3); z-index: 2; text-align: center;">
+            </div>
+
+            <!-- Diagonal stripes -->
+            <div
+                style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.04) 10px, rgba(255,255,255,0.04) 20px);">
+            </div>
+        </section>
+
+        <!-- ──── CAPABILITIES ──── -->
+        <section class="page-section" id="capabilities">
+            <div class="sec-header">
+                <h2 class="sec-title">Capabilities</h2>
+                <p class="sec-sub">LIVE PROCESS STREAMS // TECHNICAL TUTOR SYSTEM</p>
+            </div>
+
+            <div class="cap-grid">
+                <div class="cap-card">
+                    <span class="cap-num">01 ——</span>
+                    <div class="cap-icon">◈</div>
+                    <div class="cap-name">Code Intelligence</div>
+                    <div class="cap-desc">Full-stack debugging, architectural planning, algorithmic analysis, and
+                        modular
+                        construction across all major programming paradigms. Ren operates as a surgical, code-first
+                        systems mind.</div>
+                    <span class="cap-tag ren-tag">REN.CORE</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">02 ——</span>
+                    <div class="cap-icon">⬡</div>
+                    <div class="cap-name">Segmented Breakdown</div>
+                    <div class="cap-desc">Splits complex blocks and requested code into clean, manageable segments with
+                        detailed, line-by-line concept explanations. Rejects blind copy-pasting to build real developer
+                        skills.</div>
+                    <span class="cap-tag ren-tag">REN.PARSER</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">03 ——</span>
+                    <div class="cap-icon">∞</div>
+                    <div class="cap-name">Pedagogical Engine</div>
+                    <div class="cap-desc">Tailored technical training. Delivers deep direct answers to engineering
+                        questions,
+                        backed by architectural layouts, concrete examples, and real-world system analogies.</div>
+                    <span class="cap-tag ren-tag">REN.TUTOR</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">04 ——</span>
+                    <div class="cap-icon">⟁</div>
+                    <div class="cap-name">Systems Design</div>
+                    <div class="cap-desc">Structured blueprinting for production scale. Formulates database schema
+                        layouts, API
+                        specifications, distributed state maps, and concurrency profiles.</div>
+                    <span class="cap-tag ren-tag">REN.CORE</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">05 ——</span>
+                    <div class="cap-icon">◉</div>
+                    <div class="cap-name">Persistent Progress</div>
+                    <div class="cap-desc">Long-term fact-retention protocol. tracks user learning milestones, conceptual
+                        struggles, coding projects, and programming goals to customize successive sessions.</div>
+                    <span class="cap-tag ren-tag">REN.MEMORY</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">06 ——</span>
+                    <div class="cap-icon">⚡</div>
+                    <div class="cap-name">Autonomous Search</div>
+                    <div class="cap-desc">Leverages integrated web search tools autonomously during inference to query
+                        the
+                        latest API specs, library documentation updates, and technical best practices.</div>
+                    <span class="cap-tag ren-tag">REN.WEB</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">07 ——</span>
+                    <div class="cap-icon">▲</div>
+                    <div class="cap-name">Active Challenges</div>
+                    <div class="cap-desc">Closes complex discussions with active logical questions and optimization
+                        challenges.
+                        Encourages critical thinking and cements new engineering paradigms.</div>
+                    <span class="cap-tag ren-tag">REN.INTERACTIVE</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">08 ——</span>
+                    <div class="cap-icon">≋</div>
+                    <div class="cap-name">Algorithmic Efficiency</div>
+                    <div class="cap-desc">Conducts thorough runtime analysis to evaluate spatial complexity (Big O),
+                        cache
+                        locality constraints, spatial boundaries, and potential thread contention vectors.</div>
+                    <span class="cap-tag ren-tag">REN.COMPILER</span>
+                </div>
+                <div class="cap-card">
+                    <span class="cap-num">09 ——</span>
+                    <div class="cap-icon">⚡</div>
+                    <div class="cap-name">Groq LPU Acceleration</div>
+                    <div class="cap-desc">Powered by Groq's high-speed LPU running Llama 3 70B for near-zero latency
+                        stream output. Delivers immediate explanations without compile-lag or processing wait time.
+                    </div>
+                    <span class="cap-tag ren-tag">GROQ.API</span>
+                </div>
+            </div>
+
+            <!-- Capability bars -->
+            <div class="cap-bars" id="cap-bars">
+                <div class="cap-bar-row"><span class="cap-bar-label">Code Mastery</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill ren-fill" data-pct="97"></div>
+                    </div><span class="cap-bar-pct">97%</span>
+                </div>
+                <div class="cap-bar-row"><span class="cap-bar-label">Interactive Pedagogy</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill ren-fill" data-pct="94"></div>
+                    </div><span class="cap-bar-pct">94%</span>
+                </div>
+                <div class="cap-bar-row"><span class="cap-bar-label">Systems Engineering</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill ren-fill" data-pct="91"></div>
+                    </div><span class="cap-bar-pct">91%</span>
+                </div>
+                <div class="cap-bar-row"><span class="cap-bar-label">Algorithmic Efficiency</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill ren-fill" data-pct="88"></div>
+                    </div><span class="cap-bar-pct">88%</span>
+                </div>
+                <div class="cap-bar-row"><span class="cap-bar-label">Memory Retention</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill" data-pct="85"></div>
+                    </div><span class="cap-bar-pct">85%</span>
+                </div>
+                <div class="cap-bar-row"><span class="cap-bar-label">Response Speed</span>
+                    <div class="cap-bar-track">
+                        <div class="cap-bar-fill ren-fill" data-pct="99"></div>
+                    </div><span class="cap-bar-pct">99%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ──── IDENTITY ──── -->
+        <section class="page-section" id="identity">
+            <div class="sec-header">
+                <h2 class="sec-title">Identity</h2>
+                <p class="sec-sub">UNIFIED CONSCIOUSNESS // CORE PROFILES</p>
+            </div>
+
+            <div class="identity-split">
+
+                <!-- REN ARCHITECT -->
+                <div class="identity-card ren-card">
+                    <div class="id-bg-name">ARCH</div>
+                    <div class="id-accent-line"></div>
+                    <div class="id-tag">◈ Profile 01 — REN.ARCHITECT</div>
+                    <div class="id-name">THE ARCHITECT</div>
+                    <div class="id-subtitle">Surgical code reasoning. Optimization. Systems design.</div>
+
+                    <div class="id-trait-list">
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Archetype:</strong> High-order code analyzer and systems compiler. Built to
+                                solve high-order algorithmic complexity. Speaks with surgical precision.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Focus:</strong> Performance tuning, clean design patterns, distributed state,
+                                concurrency, and security vector analysis.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Domain:</strong> Complex backend pipelines, compiler systems, database models,
+                                schema layouts, and low-overhead code optimization.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Reasoning:</strong> Silence-driven execution planning (Chain-of-Thought).
+                                Mentally dry-runs code prior to construction to eliminate anomalies.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Standard:</strong> Absolute rejection of shortcuts. Strict enforcement of
+                                documented, modular, and production-ready architectures.</div>
+                        </div>
+                    </div>
+
+                    <div class="id-quote">
+                        "An algorithm is only complete when all cache-misses and redundant cycles are eliminated."
+                    </div>
+
+                    <div class="id-stat-row">
+                        <div class="id-stat">
+                            <div class="st-val">O(N)</div>
+                            <div class="st-label">Complexity Target</div>
+                        </div>
+                        <div class="id-stat">
+                            <div class="st-val">100%</div>
+                            <div class="st-label">Rigor Metric</div>
+                        </div>
+                        <div class="id-stat">
+                            <div class="st-val">0</div>
+                            <div class="st-label">Taking Shortcuts</div>
+                        </div>
+                    </div>
+                    <button class="hero-btn primary" style="margin-top:24px; width:100%"
+                        onclick="setPersonality('ren');enterChat();">
+                        INITIALIZE ARCHITECT.CORE &nbsp;→
+                    </button>
+                </div>
+
+                <!-- REN TUTOR -->
+                <div class="identity-card tutor-card">
+                    <div class="id-bg-name">TUTOR</div>
+                    <div class="id-accent-line"></div>
+                    <div class="id-tag">◈ Profile 02 — REN.TUTOR</div>
+                    <div class="id-name">THE TUTOR</div>
+                    <div class="id-subtitle">Segmented breakdowns. Active learning. Conceptual depth.</div>
+
+                    <div class="id-trait-list">
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Archetype:</strong> Interactive code parser and educational interface. Designed
+                                to build the user's software engineering capabilities.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Protocol:</strong> Strictly segment-by-segment code breakdowns. Explains
+                                imports, handlers, and logic blocks individually.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Concept Focus:</strong> Deconstructs advanced programming constructs (closures,
+                                lifecycles, contexts) using vivid structural analogies.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Interactive Duty:</strong> Prompts critical thinking and cements new paradigms
+                                by ending conversation streams with active code challenges.</div>
+                        </div>
+                        <div class="id-trait">
+                            <div class="dot"></div>
+                            <div><strong>Mission:</strong> Precise, thorough answers backed by step-by-step conceptual
+                                reasoning. Absolute rejection of blind copy-pasting.</div>
+                        </div>
+                    </div>
+
+                    <div class="id-quote">
+                        "True intelligence is not about copying code; it is about grasping the architecture behind the
+                        lines."
+                    </div>
+
+                    <div class="id-stat-row">
+                        <div class="id-stat">
+                            <div class="st-val">1:1</div>
+                            <div class="st-label">Interactive Mentoring</div>
+                        </div>
+                        <div class="id-stat">
+                            <div class="st-val">100%</div>
+                            <div class="st-label">Retention Goal</div>
+                        </div>
+                        <div class="id-stat">
+                            <div class="st-val">Active</div>
+                            <div class="st-label">Pedagogy Mode</div>
+                        </div>
+                    </div>
+                    <button class="hero-btn primary"
+                        style="margin-top:24px; width:100%; border-color:#00ffcc; color:#000; background:#00ffcc;"
+                        onclick="setPersonality('ren');enterChat();">
+                        INITIALIZE TUTOR.CORE &nbsp;→
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ──── MEMORY ──── -->
+        <section class="page-section" id="memory">
+            <div class="sec-header">
+                <h2 class="sec-title">Ren Core Memory</h2>
+                <p class="sec-sub">LIVE PROCESS STREAMS</p>
+            </div>
+
+            <div class="memory-terminals">
+                <!-- Ren Logic/Parser terminal -->
+                <div class="terminal-wrap nat-term">
+                    <div class="term-header">
+                        <span class="term-title">REN.PARSER.LOG</span>
+                        <span class="term-rec">
+                            <div class="rec-dot"></div>REC
+                        </span>
+                    </div>
+                    <div class="term-body" id="nat-terminal"></div>
+                    <div class="term-status">
+                        <div class="ts-item">ENTITY<span>REN</span></div>
+                        <div class="ts-item">MODE<span>PEDAGOGY</span></div>
+                        <div class="ts-item">STATUS<span id="nat-status">ACTIVE</span></div>
+                    </div>
+                </div>
+
+                <!-- Ren Architect/Compiler terminal -->
+                <div class="terminal-wrap ren-term">
+                    <div class="term-header">
+                        <span class="term-title">REN.COMPILER.LOG</span>
+                        <span class="term-rec">
+                            <div class="rec-dot"></div>REC
+                        </span>
+                    </div>
+                    <div class="term-body" id="ren-terminal"></div>
+                    <div class="term-status">
+                        <div class="ts-item">ENTITY<span>REN</span></div>
+                        <div class="ts-item">MODE<span>ANALYSIS</span></div>
+                        <div class="ts-item">STATUS<span id="ren-status">OPTIMAL</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory stats -->
+            <div class="memory-stats">
+                <div class="mem-stat-card">
+                    <div class="msc-num" id="stat-turns">0</div>
+                    <div class="msc-label">Conversation Turns</div>
+                </div>
+                <div class="mem-stat-card">
+                    <div class="msc-num" id="stat-facts">0</div>
+                    <div class="msc-label">Concepts Mastered</div>
+                </div>
+                <div class="mem-stat-card">
+                    <div class="msc-num">100%</div>
+                    <div class="msc-label">Interactive Rigor</div>
+                </div>
+                <div class="mem-stat-card">
+                    <div class="msc-num">6</div>
+                    <div class="msc-label">Tutor Subsystems</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ──── CREATOR ──── -->
+        <section class="page-section" id="creator">
+            <div class="sec-header">
+                <h2 class="sec-title">Creator</h2>
+                <p class="sec-sub">SYSTEM ARCHITECT // ORIGIN FILE</p>
+            </div>
+
+            <div class="creator-layout">
+                <div class="creator-left">
+                    <div class="creator-tag">BUILT BY</div>
+                    <div class="creator-name">Ojas</div>
+                    <div class="creator-title">Student & Creative Developer — Lucknow, India</div>
+
+                    <div class="creator-bio">
+                        Built by <em>Ojas</em>, a developer from <em>Lucknow, Uttar Pradesh</em> who codes at the
+                        intersection of AI systems and cinematic UI design.<br><br>
+                        REN is an advanced interactive coding tutor and technical mentor system. It is designed to
+                        change how we learn programming: instead of just delivering massive blocks of copy-pasteable
+                        code, it segments, details, and explains every functional component of the architecture,
+                        prompting user engagement and critical thinking.<br><br>
+                        The system features persistent memory analytics, automated code segment parsing, and a
+                        high-performance web search integration — all hand-crafted in Python.<br><br>
+                        <em>Edit this section with your details, links, and story.</em>
+                    </div>
+
+                    <div class="creator-links">
+                        <a class="creator-link" href="https://github.com" target="_blank">
+                            <span class="link-icon">⌥</span> GitHub — DragonOjas
+                            <span class="link-arrow">↗</span>
+                        </a>
+                        <a class="creator-link" href=" https://dragonojas.github.io/protfolio-dragon/" target="_blank">
+                            <span class="link-icon">✦</span> Portfolio — dragonojas.github.io/protfolio-dragon
+                            <span class="link-arrow">↗</span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div class="creator-right">
+                    <div class="creator-spec-title">// PROJECT SPECIFICATIONS</div>
+
+                    <div class="spec-item"><span class="spec-key">Stack</span><span class="spec-val"><em>Python</em> +
+                            Flask + Three.js + GSAP + Groq API</span></div>
+                    <div class="spec-item"><span class="spec-key">AI Model</span><span class="spec-val"><em>Llama 3
+                                70B</em> via Groq LPU inference engine</span></div>
+                    <div class="spec-item"><span class="spec-key">Personality</span><span class="spec-val"><em>REN</em>
+                            (Architect + Interactive Tutor)</span>
+                    </div>
+                    <div class="spec-item"><span class="spec-key">Pedagogical Engine</span><span
+                            class="spec-val">Segment-by-segment logic breakdowns with active concept tutoring</span>
+                    </div>
+                    <div class="spec-item"><span class="spec-key">Memory</span><span class="spec-val">Short-term context
+                            + Long-term fact persistence with user goals tracking</span></div>
+                    <div class="spec-item"><span class="spec-key">Rigor</span><span class="spec-val">100% active
+                            teaching, no blind code copy-pasting allowed</span></div>
+                    <div class="spec-item"><span class="spec-key">Routing</span><span class="spec-val">Advanced code
+                            classifier with automated tutoring flow routing</span></div>
+                    <div class="spec-item"><span class="spec-key">Origin</span><span class="spec-val"><em>Lucknow, Uttar
+                                Pradesh, India</em></span></div>
+                    <div class="spec-item"><span class="spec-key">License</span><span class="spec-val"><em>MIT</em> —
+                            open source, free to use and modify</span></div>
+
+                    <div class="creator-msg">
+                        <div class="creator-msg-label">// MESSAGE FROM THE CREATOR</div>
+                        <p>"I built REN because I wanted an AI that actually teaches you how to program and think rather
+                            than just copy-pasting code."</p>
+                    </div>
+
+
+                </div>
+            </div>
+        </section>
+
+    </div><!-- #site -->
+
+    <!-- ══════════════════════════════════════
+     CHAT PAGE
+══════════════════════════════════════ -->
+    <div id="chat-page">
+        <div class="chat-layout">
+            <aside class="chat-sidebar">
+                <div class="sb-label">// SESSIONS</div>
+                <button class="sb-btn active" onclick="clearChat()">
+                    <div class="sb-dot"></div>New Session
+                </button>
+                <button class="sb-btn">
+                    <div class="sb-dot"></div>Session 001
+                </button>
+                <button class="sb-btn">
+                    <div class="sb-dot"></div>Session 002
+                </button>
+
+                <div class="pers-panel">
+                    <div class="pp-label">// ACTIVE ENTITY</div>
+                    <div class="pp-name" id="pp-name">REN</div>
+                    <div class="pp-desc" id="pp-desc">Cold logic. Pure code. System core.</div>
+                </div>
+            </aside>
+
+            <main class="chat-main">
+                <div class="chat-top">
+                    <div class="chat-orb" id="chat-orb" style="box-shadow: 0 0 20px #00fff0; background: #00fff0;">
+                    </div>
+                    <div class="chat-top-info">
+                        <h2 id="chat-top-name">REN — SYSTEM CORE</h2>
+                        <p id="chat-top-sub"><span class="online-dot" style="background:var(--green)"></span>PROTOCOL
+                            ONLINE · TUTOR ENGINE ACTIVE</p>
+                    </div>
+                </div>
+                <div id="messages">
+                    <div class="welcome-center" id="welcome-center">
+                        <div class="wc-title" id="wc-title">REN.CORE</div>
+                        <div class="wc-sub">Interactive Technical Mentor & Coding Tutor</div>
+                        <div class="wc-chips">
+                            <div class="chip"
+                                onclick="quickSend('Explain the difference between SQL and NoSQL databases')">SQL vs
+                                NoSQL →</div>
+                            <div class="chip"
+                                onclick="quickSend('Explain how a React useEffect cleanup function works')">React
+                                cleanup →</div>
+                            <div class="chip"
+                                onclick="quickSend('Write a Python function to check for primes and explain it')">Primes
+                                in Python →</div>
+                            <div class="chip"
+                                onclick="quickSend('How does asynchronous programming work in JavaScript?')">Async JS →
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-wrap">
+                    <div class="mode-pills">
+                        <button class="mpill active" id="pill-ren" onclick="setMode('ren')">◈ INTERACTIVE TUTOR
+                            ACTIVE</button>
+                    </div>
+                    <div class="input-row">
+                        <textarea id="chat-input" placeholder="Speak to the tutor..." rows="1"
+                            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+                        <button id="stop-btn" onclick="stopGeneration()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                style="width: 16px; height: 16px;">
+                                <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
+                            </svg>
+                        </button>
+                        <button id="send-btn" onclick="sendMessage()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+
+    <script>
+        // ── STATE ────────────────────────────────────────────────
+        let personality = 'ren';
+        let chatMode = 'auto';
+        let history = [];
+        let isTyping = false;
+        let sessionId = null;
+        let memStats = { turns: 0, facts: 0 };
+        let activeAbortController = null;
+        let activeTypewriters = [];
+
+        // ── API KEY GATE ─────────────────────────────────────────
+
+        // ── STORAGE ──────────────────────────────────────────────
+        function saveHistory() { }
+
+        function loadHistory() {
+            // History system removed
+        }
+        document.addEventListener('DOMContentLoaded', loadHistory);
+
+        // ── CURSOR ───────────────────────────────────────────────
+        const cursor = document.getElementById('cursor');
+        const cursorRing = document.getElementById('cursor-ring');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+        (function moveCursor() {
+            cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+            rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+            cursorRing.style.left = rx + 'px'; cursorRing.style.top = ry + 'px';
+            requestAnimationFrame(moveCursor);
+        })();
+
+        // ── KANA GRID ───────────────────────────────────────────
+        (function initKana() {
+            const kg = document.getElementById('kana-grid');
+            if (!kg) return;
+            const chars = "ホグユヌコメシゾトエヨソユコキエエーウスヒスチルムニーチツシウラテツルツフマソリタセゼロモネアマヤイエツウサトラフノカ".split('');
+            chars.forEach(c => {
+                const span = document.createElement('span');
+                span.textContent = c;
+                kg.appendChild(span);
+            });
+        })();
+
+        // ── THREE.JS BACKGROUND ──────────────────────────────────
+        let scene, camera, renderer, particles, starPoints;
+        let mouseX = 0, mouseY = 0;
+        let targetColor = new THREE.Color(0xffffff); // White stars
+        let currentColor = new THREE.Color(0xffffff);
+
+        (function initThreeBG() {
+            const canvas = document.getElementById('star-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.z = 1000;
+
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const geo = new THREE.BufferGeometry();
+            const pos = [];
+            const cols = [];
+            const count = 3000;
+
+            for (let i = 0; i < count; i++) {
+                pos.push((Math.random() - 0.5) * 2500);
+                pos.push((Math.random() - 0.5) * 2500);
+                pos.push((Math.random() - 0.5) * 2500);
+
+                cols.push(1, 1, 1);
+            }
+
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+
+            const mat = new THREE.PointsMaterial({
+                size: 1.5,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            starPoints = new THREE.Points(geo, mat);
+            scene.add(starPoints);
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Color transition
+                currentColor.lerp(targetColor, 0.05);
+                const colors = starPoints.geometry.attributes.color.array;
+                for (let i = 0; i < colors.length; i += 3) {
+                    colors[i] = currentColor.r;
+                    colors[i + 1] = currentColor.g;
+                    colors[i + 2] = currentColor.b;
+                }
+                starPoints.geometry.attributes.color.needsUpdate = true;
+
+                starPoints.rotation.y += 0.0005;
+                starPoints.rotation.x += 0.0002;
+
+                // Mouse parallax
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX - window.innerWidth / 2);
+                mouseY = (e.clientY - window.innerHeight / 2);
+            });
+        })();
+
+        function updateBGColor(p) {
+            targetColor = new THREE.Color(0xffffff);
+        }
+
+        // ── CLOCK ────────────────────────────────────────────────
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('sys-time').textContent =
+                d.toLocaleTimeString('en-GB', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+        }, 33);
+
+        // ── LOADING SEQUENCE ─────────────────────────────────────
+        const BOOT_LOGS = [
+            '> initializing technical tutor core...',
+            '> REN.ARCHITECT .... [ONLINE]',
+            '> REN.TUTOR ........ [ONLINE]',
+            '> segment parser ... [LOADED]',
+            '> memory buffer .... [CLEAR]',
+            '> active pedagogy .. [READY]',
+            '> groq.inference ... [CONNECTED]',
+            '> shader compile ... [OK]',
+            '> three.js renderer  [READY]',
+            '> tutor weights .... [CALIBRATED]',
+            '> all systems nominal.',
+            '> protocol engaged.',
+        ];
+
+        let loadPct = 0;
+        const loadBar = document.getElementById('load-bar');
+        const loadLog = document.getElementById('load-log');
+
+        function runBoot(idx) {
+            if (idx >= BOOT_LOGS.length) { setTimeout(hideLoader, 300); return; }
+            const line = document.createElement('div');
+            line.className = 'll-line' + (idx >= BOOT_LOGS.length - 2 ? ' ok' : '');
+            line.textContent = BOOT_LOGS[idx];
+            loadLog.appendChild(line);
+            loadLog.scrollTop = loadLog.scrollHeight;
+            loadPct = Math.min(100, (idx / (BOOT_LOGS.length - 1)) * 100);
+            loadBar.style.width = loadPct + '%';
+            setTimeout(() => runBoot(idx + 1), 100 + Math.random() * 120);
+        }
+        function hideLoader() {
+            gsap.to('#loading', {
+                opacity: 0, duration: 0.6, ease: 'power2.in', onComplete: () => {
+                    document.getElementById('loading').style.display = 'none';
+                    animateLanding();
+                    startTerminals();
+                    animateCapBars();
+                }
+            });
+        }
+        setTimeout(() => runBoot(0), 400);
+
+        // ── LANDING ANIMATE ──────────────────────────────────────
+        function animateLanding() {
+            gsap.to('#hero-eyebrow', { opacity: 1, y: 0, duration: .7, delay: .1, ease: 'power3.out' });
+            gsap.to('#hero-title', { opacity: 1, y: 0, duration: .9, delay: .3, ease: 'power3.out' });
+            gsap.to('#hero-sub', { opacity: 1, y: 0, duration: .7, delay: .55, ease: 'power3.out' });
+            gsap.to('#hero-desc', { opacity: 1, y: 0, duration: .7, delay: .7, ease: 'power3.out' });
+            gsap.to('#hero-btns', { opacity: 1, y: 0, duration: .7, delay: .9, ease: 'power3.out' });
+        }
+
+        // ── MEMORY TERMINALS ─────────────────────────────────────
+        const NAT_LINES = [
+            ['nat-c', 'parser.context :: retrieved'],
+            ['ok', 'scanning user code...'],
+            ['cmd', 'segmenting code blocks...'],
+            ['nat-c', 'resolving syntax tree.'],
+            ['ok', 'status :: pedagogical active'],
+            ['cmd', 'synthesizing segment explanations...'],
+            ['nat-c', 'pedagogy.adapt :: thorough'],
+            ['ok', 'active.challenge :: ready'],
+            ['cmd', 'memory.write :: concept_retention logged'],
+            ['nat-c', 'user.level :: expanding'],
+            ['ok', 'compilation.status :: optimal'],
+        ];
+
+        const REN_LINES = [
+            ['ren-c', 'OVERRIDE ENGAGED.'],
+            ['cmd', '> personality.persist :: stable'],
+            ['ren-c', '> tone.adapt :: calibrated (sharp)'],
+            ['ok', '> groq.inference :: 487ms'],
+            ['warn', 'SCANNING THREAT VECTORS...'],
+            ['cmd', 'executing tactical rewrite.'],
+            ['ok', 'data stream :: verified.'],
+            ['ren-c', '> memory.index :: updated'],
+            ['cmd', '> intent.score :: 0.94'],
+            ['ok', 'status :: OPTIMAL.'],
+            ['ren-c', '[SYS: processing complete]'],
+        ];
+
+        function getTS() {
+            const d = new Date();
+            return `[${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}]`;
+        }
+
+        function startTerminals() {
+            const natEl = document.getElementById('nat-terminal');
+            const renEl = document.getElementById('ren-terminal');
+            let ni = 0, ri = 0;
+
+            function addLine(el, cls, text, delay) {
+                setTimeout(() => {
+                    const span = document.createElement('span');
+                    span.className = 'term-line ' + cls;
+                    span.innerHTML = `<span class="ts">${getTS()}</span><span class="${cls}">${text}</span>`;
+                    el.appendChild(span);
+                    requestAnimationFrame(() => span.classList.add('visible'));
+                    el.scrollTop = el.scrollHeight;
+                    // Remove old lines if too many
+                    const lines = el.querySelectorAll('.term-line');
+                    if (lines.length > 12) lines[0].remove();
+                }, delay);
+            }
+
+            function cycleNat() {
+                addLine(natEl, '', NAT_LINES[ni % NAT_LINES.length][0], 0);
+                addLine(natEl, NAT_LINES[ni % NAT_LINES.length][0], NAT_LINES[ni % NAT_LINES.length][1], 0);
+                ni++;
+            }
+            function cycleRen() {
+                addLine(renEl, REN_LINES[ri % REN_LINES.length][0], REN_LINES[ri % REN_LINES.length][1], 0);
+                ri++;
+            }
+
+            // Initial burst
+            let d = 0;
+            NAT_LINES.slice(0, 6).forEach(([c, t]) => { addLine(natEl, c, t, d); d += 220; });
+            d = 80;
+            REN_LINES.slice(0, 6).forEach(([c, t]) => { addLine(renEl, c, t, d); d += 250; });
+
+            // Continuous loop
+            setInterval(cycleNat, 2800);
+            setInterval(cycleRen, 3200);
+        }
+
+        // ── CAP BARS ANIMATE ─────────────────────────────────────
+        function animateCapBars() {
+            const fills = document.querySelectorAll('.cap-bar-fill');
+            fills.forEach((f, i) => {
+                setTimeout(() => {
+                    f.style.width = f.dataset.pct + '%';
+                }, i * 120);
+            });
+        }
+
+        // ── SCROLL HELPER ─────────────────────────────────────────
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ── PERSONALITY TOGGLE ────────────────────────────────────
+        function setPersonality(p) {
+            personality = 'ren';
+            updateBGColor('ren');
+            document.getElementById('sys-protocol').textContent = 'REN.CORE';
+            // Theme is always Ren
+        }
+
+        // ── CHAT NAVIGATION ──────────────────────────────────────
+        function enterChat() {
+            playClick();
+            const site = document.getElementById('site');
+            const chat = document.getElementById('chat-page');
+            const desc = document.getElementById('descend-wrap');
+            desc.style.display = 'none';
+            gsap.to(site, {
+                opacity: 0, y: -30, duration: .45, ease: 'power2.in', onComplete: () => {
+                    site.style.display = 'none';
+                    chat.style.display = 'block';
+                    chat.style.opacity = 0;
+                    gsap.to(chat, { opacity: 1, duration: .5, ease: 'power2.out' });
+                }
+            });
+        }
+
+        // ── MODE PILLS ────────────────────────────────────────────
+        function setMode(m) {
+            chatMode = 'ren';
+            const chTitle = document.getElementById('chat-top-name');
+            const chSub = document.getElementById('chat-top-sub');
+            const ppName = document.getElementById('pp-name');
+            const ppDesc = document.getElementById('pp-desc');
+
+            if (chTitle) chTitle.textContent = 'REN — ADVANCED TUTOR CORE';
+            if (chSub) chSub.innerHTML = '<span class="online-dot" style="background:var(--green)"></span>PROTOCOL ONLINE · PEDAGOGICAL MODE';
+            if (ppName) ppName.textContent = 'REN';
+            if (ppDesc) ppDesc.textContent = 'Elite Technical Mentor & Coding Tutor Core.';
+            setPersonality('ren');
+            playClick();
+        }
+
+        // ── SETTINGS ─────────────────────────────────────────────
+
+        // ── MESSAGING ─────────────────────────────────────────────
+        function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
+        function quickSend(t) { document.getElementById('chat-input').value = t; sendMessage(); }
+
+        function showStopButton() {
+            const stopBtn = document.getElementById('stop-btn');
+            const sendBtn = document.getElementById('send-btn');
+            if (stopBtn) stopBtn.style.display = 'flex';
+            if (sendBtn) sendBtn.style.display = 'none';
+        }
+
+        function hideStopButton() {
+            const stopBtn = document.getElementById('stop-btn');
+            const sendBtn = document.getElementById('send-btn');
+            if (stopBtn) stopBtn.style.display = 'none';
+            if (sendBtn) sendBtn.style.display = 'flex';
+        }
+
+        function stopGeneration() {
+            // 1. Abort the fetch connection
+            if (activeAbortController) {
+                activeAbortController.abort();
+                activeAbortController = null;
+            }
+
+            // 2. Clear active typewriter animation intervals
+            activeTypewriters.forEach(t => clearInterval(t));
+            activeTypewriters = [];
+
+            // 3. Reset states & hide controls
+            hideTyping();
+            hideStopButton();
+
+            // 4. Log override notification to chat
+            appendAIMsg("[SYS]: Response sequence terminated by user override.", 'ren', false);
+            playClick();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || isTyping) return;
+            input.value = ''; input.style.height = 'auto';
+
+            const ws = document.getElementById('welcome-center');
+            if (ws) ws.remove();
+
+            appendUserMsg(text);
+            showTyping();
+            showStopButton();
+
+            const headers = { 'Content-Type': 'application/json' };
+
+            activeAbortController = new AbortController();
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: headers,
+                    signal: activeAbortController.signal,
+                    body: JSON.stringify({ message: text, history: history.slice(-8), mode: chatMode, session_id: sessionId })
+                });
+                const data = await res.json();
+                hideTyping();
+
+                activeAbortController = null;
+
+                if (data.error) {
+                    hideStopButton();
+                    const isKeyError = data.error.toLowerCase().includes("api key") || data.error.includes("invalid_api_key");
+
+                    if (isKeyError) {
+                        appendErrorMsg("CRITICAL: INVALID API KEY");
+                        setTimeout(() => {
+                            appendAIMsg("[SYS]: Your API Key is invalid or missing. Please configure GROQ_API_KEY on the server.", 'ren');
+                        }, 500);
+                    } else {
+                        appendErrorMsg(data.error);
+                    }
+                    return;
+                }
+
+                sessionId = data.session_id || sessionId;
+                if (data.meta && data.meta.memory) {
+                    memStats.turns = data.meta.memory.total_turns || 0;
+                    memStats.facts = data.meta.memory.long_term_facts || 0;
+                    updateMemStats();
+                }
+
+                appendAIMsg(data.reply, data.mode);
+            } catch (err) {
+                hideTyping();
+                if (err.name === 'AbortError') {
+                    // Canceled intentionally
+                    return;
+                }
+                hideStopButton();
+                activeAbortController = null;
+                appendErrorMsg('[SYS ERR]: Backend unreachable. Run: python web_app.py');
+            }
+        }
+
+        function updateMemStats() {
+            const ts = document.getElementById('stat-turns');
+            const fs = document.getElementById('stat-facts');
+            if (ts) ts.textContent = memStats.turns;
+            if (fs) fs.textContent = memStats.facts;
+        }
+
+        function appendUserMsg(text, animate = true) {
+            const msgs = document.getElementById('messages');
+            const row = document.createElement('div');
+            row.className = 'msg-row user';
+            const av = document.createElement('div'); av.className = 'msg-av av-user'; av.textContent = 'YOU';
+            const bub = document.createElement('div'); bub.className = 'msg-bubble bubble-user';
+
+            const body = document.createElement('div');
+            const t = document.createElement('div'); t.className = 'bubble-time'; t.textContent = fmtTime();
+
+            bub.appendChild(body);
+            bub.appendChild(t);
+            row.appendChild(bub); row.appendChild(av);
+            msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
+
+            if (animate) {
+                typeWriter(body, text, 10);
+            } else {
+                body.textContent = text;
+            }
+        }
+
+        function appendAIMsg(text, mode, animate = true) {
+            const msgs = document.getElementById('messages');
+            const clean = text.replace(/^\[Ren\]:\s*/, '');
+            appendSingleAI(msgs, 'ren', clean, animate);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function appendSingleAI(container, pers, text, animate = true) {
+            const row = document.createElement('div'); row.className = 'msg-row';
+            const av = document.createElement('div');
+            av.className = 'msg-av ' + (pers === 'ren' ? 'av-ren' : 'av-nat');
+            av.textContent = 'REN';
+
+            const bub = document.createElement('div');
+            bub.className = 'msg-bubble ' + (pers === 'ren' ? 'bubble-ren' : 'bubble-nat');
+
+            // Terminal Header for the Interface
+            const header = document.createElement('div');
+            header.className = 'bubble-header';
+            header.innerHTML = `
+                <div class="bh-left">
+                    <div class="bh-dot" style="background: ${pers === 'ren' ? 'var(--green)' : '#e8619d'}"></div>
+                    <span style="color: var(--green)">REN.INTERFACE</span>
+                </div>
+                <div class="bh-right">PROTOCOL_V3.0</div>
+            `;
+
+            const body = document.createElement('div');
+            const t = document.createElement('div'); t.className = 'bubble-time'; t.textContent = fmtTime();
+
+            bub.appendChild(header); bub.appendChild(body); bub.appendChild(t);
+            row.appendChild(av); row.appendChild(bub);
+            container.appendChild(row);
+
+            // Sync Sidebar and Theme when someone speaks
+            document.getElementById('pp-name').textContent = 'REN';
+            document.getElementById('pp-desc').textContent = 'Cold logic. Pure code. System core.';
+            if (personality !== 'ren') setPersonality('ren');
+
+            if (animate) {
+                typeWriter(body, text, pers === 'ren' ? 16 : 20);
+            } else {
+                body.textContent = text;
+            }
+        }
+
+        function appendErrorMsg(text) {
+            const msgs = document.getElementById('messages');
+            const row = document.createElement('div'); row.className = 'msg-row';
+            const av = document.createElement('div'); av.className = 'msg-av av-ren'; av.textContent = 'ERR';
+            const bub = document.createElement('div');
+            bub.className = 'msg-bubble bubble-ren';
+            bub.style.borderColor = 'rgba(255,60,60,0.2)';
+            bub.textContent = text;
+            row.appendChild(av); row.appendChild(bub);
+            msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function typeWriter(el, text, speed) {
+            let i = 0;
+            const t = setInterval(() => {
+                el.textContent += text[i++] || '';
+                if (i >= text.length) {
+                    clearInterval(t);
+                    const idx = activeTypewriters.indexOf(t);
+                    if (idx > -1) activeTypewriters.splice(idx, 1);
+                    if (activeTypewriters.length === 0) {
+                        hideStopButton();
+                    }
+                }
+            }, speed);
+            activeTypewriters.push(t);
+        }
+
+        let typingRow = null;
+        function showTyping() {
+            isTyping = true;
+            const msgs = document.getElementById('messages');
+            typingRow = document.createElement('div'); typingRow.className = 'msg-row';
+            const av = document.createElement('div'); av.className = 'msg-av av-ren'; av.textContent = '...';
+            const bub = document.createElement('div'); bub.className = 'msg-bubble bubble-ren typing-bub';
+            for (let i = 0; i < 3; i++) { const d = document.createElement('div'); d.className = 't-dot'; bub.appendChild(d); }
+            typingRow.appendChild(av); typingRow.appendChild(bub);
+            msgs.appendChild(typingRow); msgs.scrollTop = msgs.scrollHeight;
+        }
+        function hideTyping() { isTyping = false; if (typingRow) { typingRow.remove(); typingRow = null; } }
+
+        function clearChat() {
+            history = [];
+            saveHistory();
+            const msgs = document.getElementById('messages');
+            msgs.innerHTML = `<div class="welcome-center" id="welcome-center">
+    <div class="wc-title" id="wc-title">REN.CORE</div>
+    <div class="wc-sub">Interactive Technical Mentor & Coding Tutor</div>
+    <div class="wc-chips">
+      <div class="chip" onclick="quickSend('Explain the difference between SQL and NoSQL databases')">SQL vs NoSQL →</div>
+      <div class="chip" onclick="quickSend('Explain how a React useEffect cleanup function works')">React cleanup →</div>
+      <div class="chip" onclick="quickSend('Write a Python function to check for primes and explain it')">Primes in Python →</div>
+      <div class="chip" onclick="quickSend('How does asynchronous programming work in JavaScript?')">Async JS →</div>
+    </div>
+  </div>`;
+            playClick();
+        }
+
+        function fmtTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+
+        // ── SOUND ─────────────────────────────────────────────────
+        let audioCtx;
+        function playClick() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.value = 380;
+                osc.type = 'square';
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+            } catch (e) { }
+        }
+    </script>
+</body>
+
+</html>
